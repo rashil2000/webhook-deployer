@@ -75,26 +75,26 @@ var slackPost = async (project, commitsArray, commitsUrl) => {
 
 webhookHandler1.on('push', function (repo, data) {
   console.log("'push' event on repository:", repo);
-  exec(process.env.COMMAND_1);
   slackPost(repo, data.commits, process.env.COMMITS_1);
+  exec(process.env.COMMAND_1);
 });
 
 webhookHandler2.on('push', function (repo, data) {
   console.log("'push' event on repository:", repo);
-  exec(process.env.COMMAND_2);
   slackPost(repo, data.commits, process.env.COMMITS_2);
+  exec(process.env.COMMAND_2);
 });
 
 webhookHandler3.on('push', function (repo, data) {
   console.log("'push' event on repository:", repo);
-  exec(process.env.COMMAND_3);
   slackPost(repo, data.commits, process.env.COMMITS_3);
+  exec(process.env.COMMAND_3);
 });
 
 webhookHandler4.on('push', function (repo, data) {
   console.log("'push' event on repository:", repo);
-  exec(process.env.COMMAND_3);
   slackPost(repo, data.commits, process.env.COMMITS_4);
+  exec(process.env.COMMAND_3);
 });
 
 app.use(express.static(require('path').join(__dirname, 'public')));
