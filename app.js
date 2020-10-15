@@ -20,6 +20,8 @@ app.use(webhookHandler2);
 app.use(webhookHandler3);
 app.use(webhookHandler4);
 
+var logPushEvent = repo => console.log(` ${(new Date((new Date()).toISOString().replace('Z', '-05:30'))).toISOString().slice(0, -1)} : 'push' event on repository : ${repo}\n`);
+
 var slackPost = async (project, commitsArray, commitsUrl) => {
   var changeLog = '_';
   for (var item of commitsArray) changeLog += '⋆ ' + item.message + '_\n_';
@@ -74,25 +76,25 @@ var slackPost = async (project, commitsArray, commitsUrl) => {
 }
 
 webhookHandler1.on('push', function (repo, data) {
-  console.log("'push' event on repository:", repo);
+  logPushEvent(repo);
   slackPost(repo, data.commits, process.env.COMMITS_1);
   exec(process.env.COMMAND_1);
 });
 
 webhookHandler2.on('push', function (repo, data) {
-  console.log("'push' event on repository:", repo);
+  logPushEvent(repo);
   slackPost(repo, data.commits, process.env.COMMITS_2);
   exec(process.env.COMMAND_2);
 });
 
 webhookHandler3.on('push', function (repo, data) {
-  console.log("'push' event on repository:", repo);
+  logPushEvent(repo);
   slackPost(repo, data.commits, process.env.COMMITS_3);
   exec(process.env.COMMAND_3);
 });
 
 webhookHandler4.on('push', function (repo, data) {
-  console.log("'push' event on repository:", repo);
+  logPushEvent(repo);
   slackPost(repo, data.commits, process.env.COMMITS_4);
   exec(process.env.COMMAND_3);
 });
