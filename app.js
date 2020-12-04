@@ -3,22 +3,12 @@ var express = require('express');
 var GithubWebHook = require('express-github-webhook');
 var exec = require('child_process').exec;
 
-var webhookHandler1 = GithubWebHook({ path: '/' + process.env.REPO_1, secret: process.env.SECRET_1 });
-var webhookHandler2 = GithubWebHook({ path: '/' + process.env.REPO_2, secret: process.env.SECRET_2 });
-var webhookHandler3 = GithubWebHook({ path: '/' + process.env.REPO_3, secret: process.env.SECRET_3 });
-var webhookHandler4 = GithubWebHook({ path: '/' + process.env.REPO_4, secret: process.env.SECRET_4 });
-
 var app = express();
 
 app.use(require('morgan')('dev'));
 app.use(express.json());
 app.use(express.urlencoded({ extended: false }));
 app.use(require('cookie-parser')());
-
-app.use(webhookHandler1);
-app.use(webhookHandler2);
-app.use(webhookHandler3);
-app.use(webhookHandler4);
 
 var logPushEvent = repo => console.log(` ${(new Date((new Date()).toISOString().replace('Z', '-05:30'))).toISOString().slice(0, -1)} : 'push' event on repository : ${repo}\n`);
 
@@ -75,29 +65,25 @@ var slackPost = async (project, commitsArray, commitsUrl) => {
   }
 }
 
-webhookHandler1.on('push', function (repo, data) {
-  logPushEvent(repo);
-  slackPost(repo, data.commits, process.env.COMMITS_1);
-  exec(process.env.COMMAND_1);
-});
+const numHandler = 3;
+const handlerArr = [];
 
-webhookHandler2.on('push', function (repo, data) {
-  logPushEvent(repo);
-  slackPost(repo, data.commits, process.env.COMMITS_2);
-  exec(process.env.COMMAND_2);
-});
-
-webhookHandler3.on('push', function (repo, data) {
-  logPushEvent(repo);
-  slackPost(repo, data.commits, process.env.COMMITS_3);
-  exec(process.env.COMMAND_3);
-});
-
-webhookHandler4.on('push', function (repo, data) {
-  logPushEvent(repo);
-  slackPost(repo, data.commits, process.env.COMMITS_4);
-  exec(process.env.COMMAND_3);
-});
+for (var i = 1; i <= numHandler; i++) {
+  handlerArr[i] = GithubWebHook({ path: '/' + process.env[`REPO_${i}`], secret: process.env[`SECRET_${i}`] });
+  app.use(handlerArr[i]);
+  handlerArr[i].on('push', function (repo, data) {
+    logPushEvent(repo);
+    exec(process.env[`COMMAND_${i}`], (error, stdout, stderr) => {
+      if (error) {
+        console.error(`exec error: \n${error}`);
+        return;
+      }
+      console.log(`stdout: \n${stdout}`);
+      console.error(`stderr: \n${stderr}`);
+      slackPost(repo, data.commits, process.env[`COMMITS_${i}`]);
+    });
+  });
+}
 
 app.use(express.static(require('path').join(__dirname, 'public')));
 
