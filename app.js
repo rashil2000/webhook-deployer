@@ -65,22 +65,26 @@ var slackPost = async (project, commitsArray, commitsUrl) => {
   }
 }
 
-const numHandler = 3;
-const handlerArr = [];
+const numHandler = Number(process.env.HANDLER_COUNT);
+const handlerObj = {};
 
 for (var i = 1; i <= numHandler; i++) {
-  handlerArr[i] = GithubWebHook({ path: '/' + process.env[`REPO_${i}`], secret: process.env[`SECRET_${i}`] });
-  app.use(handlerArr[i]);
-  handlerArr[i].on('push', function (repo, data) {
+  handlerObj[process.env[`REPO_${i}`]] = {
+    hook: GithubWebHook({ path: '/' + process.env[`REPO_${i}`], secret: process.env[`SECRET_${i}`] }),
+    command: process.env[`COMMAND_${i}`],
+    commitUrl: process.env[`COMMITS_${i}`]
+  };
+  app.use(handlerObj[process.env[`REPO_${i}`]].hook);
+  handlerObj[process.env[`REPO_${i}`]].hook.on('push', function (repo, data) {
     logPushEvent(repo);
-    exec(process.env[`COMMAND_${i}`], (error, stdout, stderr) => {
+    exec(handlerObj[repo].command, (error, stdout, stderr) => {
       if (error) {
         console.error(`exec error: \n${error}`);
         return;
       }
       console.log(`stdout: \n${stdout}`);
       console.error(`stderr: \n${stderr}`);
-      slackPost(repo, data.commits, process.env[`COMMITS_${i}`]);
+      slackPost(repo, data.commits, handlerObj[repo].commitUrl);
     });
   });
 }
